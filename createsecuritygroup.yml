@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  PJPrefix:
+    Type: String
+    Default: "TEST"
+  MyIP:
+    Description: IP address allowed to access EC2
+    Type: String
+    Default: "XXX.XXX.XXX.XXX/32"
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  SecurityGroup for Bastion
+# ------------------------------------------------------------#
+  # BastionSecurityGroup:
+  #   Type: "AWS::EC2::SecurityGroup"
+  #   Properties:
+  #     VpcId: { "Fn::ImportValue": !Sub "${PJPrefix}-VPC-1" }
+  #     GroupName: !Sub "${PJPrefix}-bastion-sg"
+  #     GroupDescription: "-"
+  #     Tags:
+  #       - Key: "Name"
+  #         Value: !Sub "${PJPrefix}-bastion-sg"
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: !Ref MyIP
+
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         CidrIp: !Ref MyIP
+
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: !Ref MyIP
+  #     SecurityGroupEgress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: "0.0.0.0/0"
+
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         CidrIp: "0.0.0.0/0"
+
+  # BastionSecurityGroupIngress: 
+  #   Type: "AWS::EC2::SecurityGroupIngress"
+  #   Properties: 
+  #     IpProtocol: tcp
+  #     FromPort: 80
+  #     ToPort: 80
+  #     SourceSecurityGroupId: !GetAtt [ BastionSecurityGroup, GroupId ] 
+  #     GroupId: !GetAtt [ BastionSecurityGroup, GroupId ]
+
+  WebSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: { "Fn::ImportValue": !Sub "${PJPrefix}-VPC-1" }
+      GroupName: !Sub "${PJPrefix}-web-sg"
+      GroupDescription: "-"
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${PJPrefix}-web-sg"
+  WebSecurityGroupIngress1: 
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties: 
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref MyIP
+      GroupId: !GetAtt [ WebSecurityGroup, GroupId ]
+  WebSecurityGroupIngress2: 
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties: 
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: !Ref MyIP
+      GroupId: !GetAtt [ WebSecurityGroup, GroupId ]
+  # WebSecurityGroupIngress2: 
+  #   Type: "AWS::EC2::SecurityGroupIngress"
+  #   Properties: 
+  #     IpProtocol: tcp
+  #     FromPort: 22
+  #     ToPort: 22
+  #     SourceSecurityGroupId: !GetAtt [ BastionSecurityGroup, GroupId ] 
+  #     GroupId: !GetAtt [ WebSecurityGroup, GroupId ]
+  # BastionSecurityGroupEgress1: 
+  #   Type: "AWS::EC2::SecurityGroupEgress"
+  #   Properties: 
+  #     IpProtocol: tcp
+  #     FromPort: 22
+  #     ToPort: 22
+  #     SourceSecurityGroupId: !GetAtt [ WebSecurityGroup, GroupId ] 
+  #     GroupId: !GetAtt [ BastionSecurityGroup, GroupId ]
+      
+# ------------------------------------------------------------#
+# Output Parameters
+# ------------------------------------------------------------#   
+Outputs:
+
+# ------------------------------------------------------------#
+# SecurityGroup
+# ------------------------------------------------------------#  
+  # BastionSecurityGroup:
+  #   Value: !Ref BastionSecurityGroup
+  #   Export:
+  #     Name: !Sub ${PJPrefix}-Bastion-sg
+
+  WebSecurityGroup:
+    Value: !Ref WebSecurityGroup
+    Export:
+      Name: !Sub ${PJPrefix}-Web-sg

@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+          - KeyName
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  PJPrefix:
+    Type: String
+    Default: "TEST"
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: "AWS::EC2::KeyPair::KeyName"
+
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  EC2
+# ------------------------------------------------------------#
+
+  # BastionEC2: 
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     ImageId: ami-00d101850e971728d
+  #     KeyName: !Ref KeyName
+  #     InstanceType: t2.micro
+  #     NetworkInterfaces: 
+  #       - AssociatePublicIpAddress: "true"
+  #         DeviceIndex: "0"
+  #         SubnetId: { "Fn::ImportValue": !Sub "${PJPrefix}-Public-1" }
+  #         GroupSet: 
+  #           - { "Fn::ImportValue": !Sub "${PJPrefix}-Bastion-sg" }
+  #     UserData: 
+  #       Fn::Base64: | 
+  #         #!/bin/bash
+  #         sudo yum -y install python-devel openssl-devel gcc git
+  #         sudo easy_install pip
+  #         sudo pip install ansible
+  #         ansible --version
+  #     Tags:
+  #         - Key: Name
+  #           Value: ec2-bastion
+
+  WebEC2: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0bccc42bba4dedac1
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: { "Fn::ImportValue": !Sub "${PJPrefix}-Public-1" }
+          GroupSet: 
+            - { "Fn::ImportValue": !Sub "${PJPrefix}-Web-sg" }
+      Tags:
+          - Key: Name
+            Value: ec2-web

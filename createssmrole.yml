@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+          - KeyName
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  AccountId:
+    Type: String
+    Default: "123456789012"
+
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  IAMRole
+# ------------------------------------------------------------#
+  SSMIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement: 
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+        Path: "/"

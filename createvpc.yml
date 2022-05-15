@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+      - Label: 
+          default: "Network Configuration"
+        Parameters: 
+          - VPCCIDR
+    ParameterLabels: 
+      VPCCIDR: 
+        default: "VPC CIDR(e.g.10.1.0.0/16)"
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  PJPrefix:
+    Type: String
+    Default: "TEST"
+  VPCCIDR:
+    Type: String
+    Default: "10.1.0.0/16"
+
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${PJPrefix}-VPC-1"
+
+# InternetGateway Create
+  InternetGateway: 
+    Type: "AWS::EC2::InternetGateway"
+    Properties: 
+      Tags: 
+        - Key: Name
+          Value: !Sub "${PJPrefix}-igw"
+
+# IGW Attach
+  InternetGatewayAttachment: 
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties: 
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC 
+
+# ------------------------------------------------------------#
+# Output Parameters
+# ------------------------------------------------------------#   
+Outputs:
+  VPC:
+    Value: !Ref VPC # どの値を参照するか
+    Export:
+      Name: !Sub "${PJPrefix}-VPC-1" # 外部で呼び出す時の名前
+  InternetGateway:
+    Value: !Ref InternetGateway # どの値を参照するか
+    Export:
+      Name: !Sub "${PJPrefix}-igw" # 外部で呼び出す時の名前

@@ -1,0 +1,211 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+      - Label: 
+          default: "Network Configuration"
+        Parameters: 
+          - VPCCIDR
+    ParameterLabels: 
+      VPCCIDR: 
+        default: "VPC CIDR(e.g.10.1.0.0/16)"
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  PJPrefix:
+    Type: String
+    Default: "TEST"
+  PublicCIDR1:
+    Type: String
+    Default: "10.1.0.0/24"
+  PublicCIDR2:
+    Type: String
+    Default: "10.1.1.0/24"
+  PrivateCIDR1:
+    Type: String
+    Default: "10.1.2.0/24"
+  PrivateCIDR2:
+    Type: String
+    Default: "10.1.3.0/24"
+
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+
+# ------------------------------------------------------------#
+#  Subnet
+# ------------------------------------------------------------#
+  publicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 'ap-northeast-1a'
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      CidrBlock: !Ref PublicCIDR1
+      Tags:
+        - Key: Name
+          Value: !Sub ${PJPrefix}-Public-1
+  publicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 'ap-northeast-1a'
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      CidrBlock: !Ref PublicCIDR2
+      Tags:
+        - Key: Name
+          Value: !Sub ${PJPrefix}-Public-2
+  privateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 'ap-northeast-1a'
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      CidrBlock: !Ref PrivateCIDR1
+      Tags:
+        - Key: Name
+          Value:  !Sub ${PJPrefix}-Private-1
+  privateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 'ap-northeast-1a'
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      CidrBlock: !Ref PrivateCIDR2
+      Tags:
+        - Key: Name
+          Value: !Sub ${PJPrefix}-Private-2
+
+# ------------------------------------------------------------#
+#  RouteTable
+# ------------------------------------------------------------#
+  PublicRouteTable1: 
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      Tags: 
+        - Key: Name
+          Value: !Sub "${PJPrefix}-public-route-1"
+  PublicRouteTable2: 
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      Tags: 
+        - Key: Name
+          Value: !Sub "${PJPrefix}-public-route-2"
+
+  PrivateRouteTable1: 
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      Tags: 
+        - Key: Name
+          Value: !Sub "${PJPrefix}-private-route-1"
+  PrivateRouteTable2: 
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: {'Fn::ImportValue': !Sub '${PJPrefix}-VPC-1'}
+      Tags: 
+        - Key: Name
+          Value: !Sub "${PJPrefix}-private-route-2"
+
+# ------------------------------------------------------------#
+# Routing
+# ------------------------------------------------------------# 
+  PublicRoute1: 
+    Type: "AWS::EC2::Route"
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable1
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: {'Fn::ImportValue': !Sub '${PJPrefix}-igw'}
+  PublicRoute2: 
+    Type: "AWS::EC2::Route"
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable2
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: {'Fn::ImportValue': !Sub '${PJPrefix}-igw'}
+
+# ------------------------------------------------------------#
+# RouteTable Associate
+# ------------------------------------------------------------# 
+  PublicSubnet1RouteTableAssociation: 
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      SubnetId: !Ref publicSubnet1 
+      RouteTableId: !Ref PublicRouteTable1
+
+  PublicSubnet2RouteTableAssociation: 
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      SubnetId: !Ref publicSubnet2
+      RouteTableId: !Ref PublicRouteTable2
+
+  PrivateSubnet1RouteTableAssociation: 
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      SubnetId: !Ref privateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1 
+
+  PrivateSubnet2RouteTableAssociation: 
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      SubnetId: !Ref privateSubnet2
+      RouteTableId: !Ref PrivateRouteTable2
+
+
+# ------------------------------------------------------------#
+# Output Parameters
+# ------------------------------------------------------------#   
+Outputs:
+
+# ------------------------------------------------------------#
+# Subnet
+# ------------------------------------------------------------#  
+  publicSubnet1:
+    Value: !Ref publicSubnet1
+    Export:
+      Name: !Sub ${PJPrefix}-Public-1
+  publicSubnet2:
+    Value: !Ref publicSubnet2
+    Export:
+      Name: !Sub ${PJPrefix}-Public-2
+  privateSubnet1:
+    Value: !Ref privateSubnet1
+    Export:
+      Name: !Sub ${PJPrefix}-Private-1
+  privateSubnet2:
+    Value: !Ref privateSubnet2
+    Export:
+      Name: !Sub ${PJPrefix}-Private-2
+
+
+
+# ------------------------------------------------------------#
+# RouteTable
+# ------------------------------------------------------------#  
+  PublicRouteTable1:
+    Value: !Ref PublicRouteTable1
+    Export:
+      Name: !Sub "${PJPrefix}-public-route-1"
+
+  PublicRouteTable2:
+    Value: !Ref PublicRouteTable2
+    Export:
+      Name: !Sub "${PJPrefix}-public-route-2"
+
+  PrivateRouteTable1:
+    Value: !Ref PrivateRouteTable1
+    Export:
+      Name: !Sub "${PJPrefix}-private-route-1"
+
+  PrivateRouteTable2:
+    Value: !Ref PrivateRouteTable2
+    Export:
+      Name: !Sub "${PJPrefix}-private-route-2"

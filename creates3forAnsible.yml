@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# ------------------------------------------------------------#
+# MetaData
+# ------------------------------------------------------------# 
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "Project Name Prefix"
+        Parameters: 
+          - PJPrefix
+          - KeyName
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  AccountId:
+    Type: String
+    Default: "123456789012"
+
+# ------------------------------------------------------------#
+#  Resource
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  S3
+# ------------------------------------------------------------#
+  S3Ansible:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "s-ono-${AccountId}-ansible"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: AnsibleBucketLifecycleRule
+            Status: Enabled
+            # 365日経過したら削除
+            ExpirationInDays: 365
+            # 180日経過したらS3 clacierに移行する
+            Transitions:
+              - StorageClass: GLACIER
+                TransitionInDays: 180
